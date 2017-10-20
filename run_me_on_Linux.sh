@@ -4,27 +4,24 @@
 # the first time
 
 # checking if pip exist
-pip_exi=`command -v pip`
-pip2_exi=`command -v pip3`
+pip_exi=`command -v pip3`
 # checking if python exist
-python2=`command -v python3`
-python=`command -v python`
+python2=`command -v python3.4`
 # checking if qt4 exists
 qt=`command -v qmake`
 # checking if cmake exists
 cmake=`command -v cmake`
 # checking if virtualenv exists
 virtenv=`command -v virtualenv`
-virtenv2=`command -v virtualenv2`
 
-if [ "$pip_exi" == "" ] && [ "$pip2_exi" == "" ]
+if [ "$pip_exi" == "" ]
 then
-  echo "Error: please install python-pip or python2-pip, from your package manager"
+  echo "Error: please install python3-pip, from your package manager"
   exit 0
 fi
 if [ "$python" == "" ] && [ "$python2" == "" ]
 then
-  echo "Error: please install python or python2, from your package manager"
+  echo "Error: please install python3.4, from your package manager"
   exit 0
 fi
 if [ "$cmake" == "" ]
@@ -32,14 +29,14 @@ then
   echo "Error: please install cmake, from your package manager"
   exit 0
 fi
-if [ "$virtenv" == "" ] && [ "$virtenv2" == "" ]
+if [ "$virtenv" == "" ]
 then
-  echo "Error: please install python-virtualenv or python2-virtualenv, from your package manager"
+  echo "Error: please install python-virtualenv or python3-virtualenv, from your package manager"
   exit 0
 fi
 if [ "$qt" == "" ]
 then
-  echo "Error: please install qt4 or qt4-defaults, from your package manager"
+  echo "Error: please install qt5 or qt5-defaults, from your package manager"
   exit 0
 fi
 
@@ -49,18 +46,9 @@ then
   if [ -f requirements.txt ]
   then
     echo "##### Creating virtual enviroment #####"
-    virtualenv --python=python3.6 installiation/ && source installiation/bin/activate
+    virtualenv --python=python3.4 installiation/ && source installiation/bin/activate
     echo "##### Installing packages from pip #####"
     pip install -r requirements.txt
-    echo "##### Adding user to local printers group #####"
-    if [ "`groups | grep lp`" == "" ]
-    then
-      sudo usermod -a -G lp $(whoami)
-      echo "##### All done #####"
-      echo "%%% now you can do , python run.py and it should work %%%"
-      read -p ">> System requires restart. Type yes to restart : " restart
-      if [ "$restart" == "yes" ];then sudo shutdown -r now;fi
-    fi
     echo "##### All done #####"
   else
     echo "Error: can not find the requirements text file"
@@ -84,18 +72,18 @@ then
     echo "Error: must --install enviroment first .."
     exit 0
   fi
-  echo "##### Running FQM 0.2 #####"
+  echo "##### Running chrome-cut 0.1 #####"
   if [ -f run.py ]
   then
     python run.py
   else
-    echo "Error: can not find FQM run.py"
+    echo "Error: can not find chrome-cut run.py"
   fi
 else
   echo -e "\t --help : Usage \n"
   echo -e "\t\t $0 --install \t to install packages required"
   echo -e "\t\t $0 --uninstall \t to remove packages installed"
-  echo -e "\t\t $0 --run \t to run FQM with the right settings"
+  echo -e "\t\t $0 --run \t to run chrome-cut with the right settings"
   echo -e "\t\t $0 --help \t to print out this message"
 fi
 

@@ -1,20 +1,25 @@
-#!/bin/python2
 import socket
 from netifaces import ifaddresses, interfaces
 from sys import exit, argv
-from os import system
+from os import system, name
 from multiprocessing.pool import ThreadPool
 from requests import post, delete, get
 from json import dumps
 from time import sleep
 
 
-def get_ips():
+def get_ips(gui=False):
     """ Getting a list of ips obtained by all network interfaces """
     lips = []
     for i in interfaces():
         try:
-            lips.append(ifaddresses(i)[2][0].get('addr'))
+            if gui:
+                if name == 'nt':
+                    lips.append(' , ' + ifaddresses(i)[2][0].get('addr'))
+                else:
+                    lips.append(i + ' , ' + ifaddresses(i)[2][0].get('addr'))
+            else:
+                lips.append(ifaddresses(i)[2][0].get('addr'))
         except:
             pass
     if len(lips) >= 1:
@@ -22,18 +27,25 @@ def get_ips():
     return None
 
 
-def ch_ip():
+def ch_ip(lip='127.0.0.1', gui=False):
     """ returning a ready to be used ip with user chosing """
     c = 0
     slist = []
     if get_ips() is None:
         print('Error: no networks connected were found')
         exit(0)
-    for ips in get_ips():
-        c += 1
-        print("type [ %i ] for : %s " % (c, ips))
-        slist.append([c, ips])
-    inp = input('# please , select one :> ')
+    if gui:
+        if lip in get_ips():
+            slist.append(lip)
+        else:
+            print('Error: inserted local ip does not exist')
+            return None
+    else:
+        for ips in get_ips():
+            c += 1
+            print("type [ %i ] for : %s " % (c, ips))
+            slist.append([c, ips])
+        inp = input('# please , select one :> ')
     for f in slist:
         if int(f[0]) == int(inp):
             cip = str(f[1])
@@ -46,12 +58,20 @@ def ch_ip():
 
 def det_ccast(ip):
     """ to detect chrome cast with its known ports and return its ip """
-    ports = [1900, 8008, 8009, 5353]  # known ports
+    ports = [8008, 8009]  # known ports
     results = []  # in-which socket response will be stored to check later
     for p in ports:
         socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket.setdefaulttimeout(2)
+        cip = str(ip)
+        ncip = cip.split('.')
+        ncip[len(ncip) - 1] = ''
+        cip = '.'.join(ncip)
+        for i in get_ips():
+            if cip in i:
+                cip = i
+        socket.setdefaulttimeout(4)
         try:
+            socket_obj.bind((cip, 0))
             result = socket_obj.connect_ex((ip, p))
             results.append(result)
         except:
@@ -63,13 +83,13 @@ def det_ccast(ip):
         return [False, ip]
 
 
-def loop_ips(oip, vbos=False, quite=False):
+def loop_ips(oip, vbos=False, quite=False, thds=30):
     """ looping through the ips from ch_ip till 255 and detect using
     det_ccast and returning a list of potential chromecasts """
     ccast_l = []  # chrome cast ips list
     threads = []  # list of appended threads to check their results
     pool = ThreadPool(
-        processes=30)  # threads pool with number of expected threads
+        processes=thds)  # threads pool with number of expected threads
     if not quite:
         print("*" * 4, " Started threading scan ", "*" * 5)
     for np in range(1, 255):
@@ -123,7 +143,7 @@ def cancel_app(fip):
             return True
         except:
             pass
-    return False
+    return None
 
 
 def send_app(fip, ylink="v=04F4xlWSFh0&t=9"):
