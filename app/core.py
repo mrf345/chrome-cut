@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import socket
 from netifaces import ifaddresses, interfaces
 from sys import exit, argv
@@ -176,7 +179,7 @@ def get_app(fip):
 
 
 def cast(dip=False, vid=False, counter=0):
-    dr = raw_input(" >>> please, insert repeating duration in seconds : ")
+    dr = input(" >>> please, insert repeating duration in seconds : ")
     dr = int(dr)
     if dr > 100000:
         print("Error: too large of a duration ...")
@@ -203,7 +206,7 @@ def cast(dip=False, vid=False, counter=0):
 
 
 def shut(dip=False, auto=True):
-    dr = raw_input(" >>> please, insert repeating duration in seconds : ")
+    dr = input(" >>> please, insert repeating duration in seconds : ")
     dr = int(dr)
     if dr > 100000:
         print("Error: too large of a duration ...")

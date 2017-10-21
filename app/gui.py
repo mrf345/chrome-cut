@@ -129,7 +129,7 @@ class CC_window(QWidget):
             Amsg += ", This work is a free, open-source project licensed "
             Amsg += " under Mozilla Public License version 2.0 . <br><br>"
             Amsg += " visit us for more infos and how-tos :<br> "
-            Amsg += "<b><a href='https://chrom-cut.github.io/'> "
+            Amsg += "<b><a href='https://chrome-cut.github.io/'> "
             Amsg += "https://chrome-cut.github.io/ </a> </b></center>"
             Amsgb = "About chrome-cut"
             return QMessageBox.about(

@@ -1,12 +1,13 @@
 #!/bin/bash
-# Read me : this script will install FQM requirements and your user into the
+# Read me : this script will install Chrome-cut requirements and your user into the
 # printing group. this script only meant to be run once before you run FQM for
 # the first time
 
 # checking if pip exist
 pip_exi=`command -v pip3`
+pip2_exi=`command -v pip`
 # checking if python exist
-python2=`command -v python3.4`
+python3=`command -v python3.4`
 # checking if qt4 exists
 qt=`command -v qmake`
 # checking if cmake exists
@@ -14,12 +15,12 @@ cmake=`command -v cmake`
 # checking if virtualenv exists
 virtenv=`command -v virtualenv`
 
-if [ "$pip_exi" == "" ]
+if [ "$pip_exi" == "" ] || [ "$pip2_exi" == "" ]
 then
   echo "Error: please install python3-pip, from your package manager"
   exit 0
 fi
-if [ "$python" == "" ] && [ "$python2" == "" ]
+if [ "$python3" == "" ]
 then
   echo "Error: please install python3.4, from your package manager"
   exit 0
