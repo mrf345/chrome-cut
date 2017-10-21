@@ -15,14 +15,14 @@ cmake=`command -v cmake`
 # checking if virtualenv exists
 virtenv=`command -v virtualenv`
 
-if [ "$pip_exi" == "" ] || [ "$pip2_exi" == "" ]
-then
-  echo "Error: please install python3-pip, from your package manager"
-  exit 0
-fi
 if [ "$python3" == "" ]
 then
   echo "Error: please install python3.4, from your package manager"
+  exit 0
+fi
+if [ "$pip_exi" == "" ] || [ "$pip2_exi" == "" ]
+then
+  echo "Error: please install python3-pip, from your package manager"
   exit 0
 fi
 if [ "$cmake" == "" ]
