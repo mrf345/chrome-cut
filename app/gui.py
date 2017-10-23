@@ -251,6 +251,21 @@ class CC_window(QWidget):
         hlayout.addWidget(self.fbutton)
         glo.addLayout(hlayout)
 
+    def ch_dur(th=None, dur=10):
+        if len(dur) >= 1:
+            try:
+                dur = int(dur)
+            except:
+                dur = None
+            if dur is None or not isinstance(dur, int):
+                self.s_bar.setStyleSheet(self.s_error)
+                self.s_bar.showMessage(
+                    '! Error: wrong duration entery, only integers')
+                return None
+        else:
+            dur = 10
+        return dur
+
     def k_act(self):
         if self.ci_list.count() >= 1:
             cr = self.ci_list.currentRow()
@@ -258,17 +273,9 @@ class CC_window(QWidget):
                 cr = 0
             ip = self.ci_list.item(cr).text()
             if self.Looping is not None:
-                dur = self.nlo.text()
-                if len(dur) >= 1:
-                    try:
-                        dur = int(dur)
-                    except:
-                        self.s_bar.setStyleSheet(self.s_error)
-                        self.s_bar.showMessage(
-                            '! Error: wrong duration entery, only integers')
-                        return True
-                else:
-                    dur = 10
+                dur = self.ch_dur(self.nlo.text())
+                if dur is None:
+                    return True
                 self.P = CC_thread(cancel_app, dur, ip)
                 self.P.start()
                 self.P.somesignal.connect(self.handleStatusMessage)
@@ -299,17 +306,9 @@ class CC_window(QWidget):
                 cr = 0
             ip = self.ci_list.item(cr).text()
             if self.Looping is not None:
-                dur = self.nlo.text()
-                if len(dur) >= 1:
-                    try:
-                        dur = int(dur)
-                    except:
-                        self.s_bar.setStyleSheet(self.s_error)
-                        self.s_bar.showMessage(
-                            '! Error: wrong duration entery, only integers')
-                        return True
-                else:
-                    dur = 10
+                dur = self.ch_dur(self.nlo.text())
+                if dur is None:
+                    return True
                 self.P = CC_thread(reset_cc, dur, ip)
                 self.P.start()
                 self.P.somesignal.connect(self.handleStatusMessage)
@@ -340,17 +339,9 @@ class CC_window(QWidget):
                 cr = 0
             ip = self.ci_list.item(cr).text()
             if self.Looping is not None:
-                dur = self.nlo.text()
-                if len(dur) >= 1:
-                    try:
-                        dur = int(dur)
-                    except:
-                        self.s_bar.setStyleSheet(self.s_error)
-                        self.s_bar.showMessage(
-                            '! Error: wrong duration entery, only integers')
-                        return True
-                else:
-                    dur = 10
+                dur = self.ch_dur(self.nlo.text())
+                if dur is None:
+                    return True
                 self.P = CC_thread(send_app, dur, ip, link)
                 self.P.start()
                 self.P.somesignal.connect(self.handleStatusMessage)
