@@ -10,6 +10,7 @@ import asyncio
 from requests import post, delete, get
 from json import dumps
 from time import sleep
+import click
 
 counter = 0  # global counter to count tasks, too tired to think of any better
 ports = [8008, 8009]  # global chrome cast known ports
@@ -31,18 +32,28 @@ def get_ips(gui=False):
     return None
 
 
-def ch_ip(ip='127.0.0.1'):
-    """ returning the passed ip with 1 in the end"""
-    if ip not in get_ips():
-        print('Error: inserted local ip does not exist')
-        return None
-    splited_ip = ip.split('.')
-    splited_ip[len(splited_ip) - 1] = '1'
-    return '.'.join(splited_ip)
+def is_ccast(ip):
+    """ to check without async, if ip is legit chrome cast device """
+    global ports
+    results = []
+    for port in ports:
+        socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            for i in get_ips():  # getting the network card ip to connect with
+                if '.'.join(ip.split('.')[0:-1]) in i:
+                    connected_ip = i
+            socket.setdefaulttimeout(0.01)
+            socket_obj.bind((connected_ip, 0))
+            result = socket_obj.connect_ex((ip, port))
+            results.append(result)
+        except:
+            pass
+        socket_obj.close()
+    return True if 0 in results else False
 
 
 @asyncio.coroutine  # old style since using py3.4
-def det_ccast(ip, log=False, add_log=None):
+def det_ccast(ip, log=False):
     """
     to detect chrome cast with its known ports and return its ip
     and status in list, asyncrnioudfdslfr-sly.
@@ -65,11 +76,17 @@ def det_ccast(ip, log=False, add_log=None):
     if log:
         global counter
         counter += 1
-        system('clear')  # FIXME use click.clear() instead
-        print(add_log)
-        print('Completed : ' + str(int(counter * 100 / 255)) + '%')
-        print('[' + '=' * int(counter / 10), ']')
-        print("#" * 5, " Ctrl-c to exit .. ")
+        click.clear()
+        click.echo(
+            click.style(
+                'Completed : ' + str(int(counter * 100 / 255)) + '%',
+                bold=True, fg='red'))
+        click.echo()
+        click.echo(
+            click.style(
+                ('[' + '=' * int(counter / 10)) + ']',
+                blink=False, bg='red', fg='black'))
+        click.clear()
     yield from asyncio.sleep(0)
     return [True, ip] if 0 in results else [False, ip]
 
@@ -81,7 +98,7 @@ def loop_ips(ip, log=False):
     loop = asyncio.get_event_loop()
     tasks = [det_ccast(  # fetching the range of ips to async function
         '.'.join(ip.split('.')[0:-1]) + str(i),
-        log, None) for i in range(1, 256)]
+        log) for i in range(1, 256)]
     results = loop.run_until_complete(asyncio.gather(asyncio.wait(tasks)))
     #  loop.close() should be stopped in the before exist
     for result in results[0][0]:  # looking for successful ones
