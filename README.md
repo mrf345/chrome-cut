@@ -1,5 +1,5 @@
 <p align='center'>
-<img width='50%' src='https://chrome-cut.github.io/images/logo_cc.png' />
+<img width='50%' src='https://mrf345.github.io/images/logo_cc.png' />
 </p>
 
 <h3 align='center'>
@@ -7,7 +7,7 @@ Basic tool programmed in Python 3.4 and QT5. It gives you the ability to detect,
 </h3>
 <hr />
 <p align='center'>
-<img width='90%' src='https://chrome-cut.github.io/images/template_cc.png' />
+<img width='90%' src='https://mrf345.github.io/images/template_ccut.png' />
 </p>
 
 ## Setup:
