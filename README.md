@@ -26,7 +26,8 @@ Basic tool programmed in Python 3.4 and QT5. It gives you the ability to detect,
 
 ## Credit:
 > - [Blog][7aef02c6] that inspired this tool.
-  [7aef02c6]: https://fiquett.com/2013/07/chromecast-traffic-sniffing/ "Blog link"
+
+[7aef02c6]: https://fiquett.com/2013/07/chromecast-traffic-sniffing/ "Blog link"
 
 <br />
 <p align='center'>
