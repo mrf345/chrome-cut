@@ -9,7 +9,7 @@ from PySide.QtGui import QVBoxLayout, QHBoxLayout, QMainWindow
 from PySide.QtCore import QCoreApplication, Qt, QThread, QSize, Signal, Slot
 from .ex_functions import r_path
 from functools import partial
-from .core import get_ips, det_ccast, cancel_app, reset_cc, send_app
+from .core import get_ips, is_ccast, cancel_app, reset_cc, send_app
 
 
 class CC_thread(QThread):
@@ -54,6 +54,7 @@ class CC_thread(QThread):
 class CC_window(QWidget):
     def __init__(self):
         super(CC_window, self).__init__()
+        self.version = '0.2'
         glo = QVBoxLayout(self)
         self.Runningo = None
         self.Looping = None
@@ -80,7 +81,7 @@ class CC_window(QWidget):
         self.show()
 
     def SelfIinit(self, icon):
-        self.setWindowTitle('chrome-cut 0.1')
+        self.setWindowTitle('chrome-cut ' + self.version)
         self.setGeometry(300, 300, 200, 150)
         self.setMinimumWidth(600)
         self.setMaximumWidth(600)
@@ -125,12 +126,12 @@ class CC_window(QWidget):
     def a_btn(self, icon, glo):
         def show_about():
             Amsg = "<center>All credit reserved to the author of chrome-cut "
-            Amsg += " version 0.1"
+            Amsg += " version " + self.version
             Amsg += ", This work is a free, open-source project licensed "
             Amsg += " under Mozilla Public License version 2.0 . <br><br>"
             Amsg += " visit us for more infos and how-tos :<br> "
-            Amsg += "<b><a href='https://chrome-cut.github.io/'> "
-            Amsg += "https://chrome-cut.github.io/ </a> </b></center>"
+            Amsg += "<b><a href='https://github.io/mrf345/chrome-cut'> "
+            Amsg += "https://github.io/mrf345/chrome-cut </a> </b></center>"
             Amsgb = "About chrome-cut"
             return QMessageBox.about(
                 self,
@@ -162,9 +163,9 @@ class CC_window(QWidget):
                                                msg)
         if okPressed and text != '':
             self.setCursor(Qt.BusyCursor)
-            ch = det_ccast(text)
-            if ch[0]:
-                self.il_add([ch[1]])
+            ch = is_ccast(text)
+            if ch:
+                self.il_add([text])
                 self.unsetCursor()
                 self.lebutton.setEnabled(True)
                 return True
@@ -465,8 +466,8 @@ class CC_window(QWidget):
         msgg += " Opps, a critical error has occurred, we will be "
         msgg += " grateful if you can help fixing it, by reporting to us "
         msgg += " at : <br><br> "
-        msgg += "<b><a href='https://chrome-cut.github.io/'> "
-        msgg += "https://chrome-cut.github.io/ </a></b> </center>"
+        msgg += "<b><a href='https://github.io/mrf345/chrome-cut'> "
+        msgg += "https://github.io/mrf345/chrome-cut </a></b> </center>"
         mm = QMessageBox.critical(
             self,
             "Critical Error",

